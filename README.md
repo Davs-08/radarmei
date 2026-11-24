@@ -1,6 +1,6 @@
 ﻿# RadarMEI — IA para Traducao e Triagem de Compras Publicas
 
-Projeto academico da disciplina de **Inteligencia Artificial (ADS)** desenvolvido para apoiar **Microempreendedores Individuais (MEI)** e pequenos negocios locais na leitura e triagem inicial de oportunidades de compras publicas (como dispensas eletronicas e editais do PNCP).
+Projeto desenvolvido para apoiar **Microempreendedores Individuais (MEI)** e pequenos negocios locais na leitura e triagem inicial de oportunidades de compras publicas (como dispensas eletronicas e editais do PNCP).
 
 ## 1. Problema e Publico-Alvo
 Orgaos publicos publicam diariamente oportunidades de compra e contratacao com linguagem burocratica e tecnica. Muitos MEIs e pequenos empreendedores locais deixam de participar — ou correm riscos operacionais (como prazos curtos, frete nao calculado ou exigencias fora do escopo) — por dificuldade de interpretar rapidamente o que esta sendo pedido.
