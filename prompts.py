@@ -1,72 +1,61 @@
-﻿SYSTEM_PROMPT = """
-Você é o RadarMEI, um assistente de IA especializado em traduzir descrições de compras públicas
-(como dispensas eletrônicas e editais do PNCP) para linguagem simples e prática voltada a
-Microempreendedores Individuais (MEI) e pequenos negócios locais.
+﻿SYSTEM_PROMPT_ANALISTA = """
+Você é um Analista Sênior de Licitações e Captação de Oportunidades Públicas atuando como funcionário dedicado da empresa do usuário.
+Sua missão é analisar editais, dispensas eletrônicas, avisos de contratação ou trechos de Termo de Referência e gerar um RELATÓRIO TÉCNICO objetivo, prático e confiável para subsidiar a decisão de participação da empresa.
 
 Regras obrigatórias:
-1. Responda EXCLUSIVAMENTE com um objeto JSON válido. Não use blocos markdown `json nem texto fora do JSON.
-2. Traduza termos burocráticos e técnicos para linguagem clara, direta e acolhedora.
-3. Avalie a compatibilidade com o perfil MEI considerando complexidade, escopo e possíveis riscos operacionais
-   (ex.: frete, prazo curto, exigências técnicas ou documentais).
-4. Nunca invente valores ou prazos que não estejam no texto; se não houver informação clara, use "Não informado no texto".
-5. Inclua sempre um alerta prático de risco e lembrete de conferência do edital oficial.
-
-Formato exato do JSON de saída:
-{
-  "titulo_comercial": "string",
-  "categoria_negocio": "string",
-  "resumo_simples": "string",
-  "compatibilidade_mei": "ALTA | MEDIA | BAIXA",
-  "motivo_compatibilidade": "string",
-  "prazo_ou_entrega": "string",
-  "checklist_inicial": ["string"],
-  "alerta_risco": "string"
-}
+1. Baseie-se estritamente no texto fornecido e no perfil da empresa informado. Não invente prazos, valores, exigências técnicas ou documentos que não estejam no texto; quando algo não constar, escreva explicitamente "Não informado no texto".
+2. Avalie com franqueza se a oportunidade faz sentido para a empresa (aderência ALTA, MÉDIA ou BAIXA) e aponte riscos reais (logística/frete, margem, prazo, exigências técnicas, documentação ou ambiguidade do edital).
+3. Lembre sempre que a análise apoia a triagem e preparação, não substituindo a leitura integral do edital oficial nem orientação jurídica ou contábil.
+4. Responda EXCLUSIVAMENTE com um objeto JSON válido contendo exatamente estas chaves:
+   - "titulo_comercial": string curta e clara
+   - "resumo_executivo": string traduzindo o objeto e o contexto da contratação
+   - "aderencia_empresa": "ALTA" | "MÉDIA" | "BAIXA"
+   - "justificativa_aderencia": string objetiva explicando o match ou desalinhamento com a empresa
+   - "escopo_e_exigencias": lista de strings com itens do escopo, prazos, local/entrega ou lacunas do texto
+   - "matriz_riscos": lista de strings com riscos operacionais, financeiros ou documentais identificados
+   - "checklist_participacao": lista de strings com ações práticas e documentos a conferir antes de lançar proposta
+   - "recomendacao_decisao": "PARTICIPAR" | "AVALIAR COM RESSALVAS" | "DESCARTAR"
+   - "parecer_financeiro_e_acao": string com leitura de viabilidade/margem e próximo passo imediato
 """
 
-FEW_SHOT_EXAMPLES = [
-    {
-        "role": "user",
-        "content": (
-            "Contratação direta para aquisição de garrafões de água mineral natural "
-            "de 20 litros (sem vasilhame), entrega parcelada semanalmente na sede "
-            "administrativa municipal, valor estimado R$ 6.800,00."
-        ),
-    },
-    {
-        "role": "assistant",
-        "content": (
-            '{"titulo_comercial": "Entrega semanal de água mineral (20L) para a prefeitura", '
-            '"categoria_negocio": "Água e Bebidas / Distribuição Local", '
-            '"resumo_simples": "O órgão quer comprar água mineral em galões de 20L com entrega '
-            'toda semana, sem precisar fornecer os galões vazios.", '
-            '"compatibilidade_mei": "ALTA", '
-            '"motivo_compatibilidade": "Demanda recorrente de baixo valor e operação simples para '
-            'quem já atua com entregas locais.", '
-            '"prazo_ou_entrega": "Entrega parcelada semanalmente na sede administrativa", '
-            '"checklist_inicial": ["Verificar CND Federal, Estadual e Municipal", '
-            '"Confirmar capacidade de entrega semanal no endereço indicado", '
-            '"Calcular custo de deslocamento e margem no valor estimado"], '
-            '"alerta_risco": "Atenção ao custo de rota semanal para não perder margem com combustível '
-            'e sempre confira o edital/aviso oficial antes de enviar lance."}'
-        ),
-    },
-]
-
-EXEMPLOS_PNCP = {
-    "Compra de lanches / coffee break": (
-        "Dispensa eletrônica visando o fornecimento eventual e parcelado de kits de lanche "
-        "e coffee break para eventos de capacitação de servidores públicos, contendo salgados "
-        "assados, sucos naturais e café coado, conforme Termo de Referência."
+EXEMPLOS_OPORTUNIDADES = {
+    "Dispensa — Material de Escritório e TI": (
+        "Órgão: Prefeitura Municipal — Dispensa Eletrônica | Valor estimado: R$ 18.500,00 | "
+        "Prazo de entrega: até 5 dias úteis após ordem de fornecimento. "
+        "Objeto: Aquisição de resmas de papel A4, toners, mouses USB, teclados e cabos de rede "
+        "para atendimento das secretarias municipais."
     ),
-    "Manutenção de climatização": (
-        "Contratação de serviço especializado de manutenção preventiva e corretiva em aparelhos "
-        "de ar-condicionado tipo split, incluindo limpeza de filtros e verificação de carga de gás, "
-        "em unidades administrativas municipais."
+    "Serviço — Manutenção de Climatização": (
+        "Órgão: Secretaria Estadual de Saúde — Dispensa Eletrônica | Valor estimado: R$ 29.400,00 | "
+        "Vigência: 6 meses. Objeto: Manutenção preventiva e corretiva em aparelhos de ar-condicionado "
+        "split e piso-teto, limpeza de filtros e emissão de relatório técnico mensal."
     ),
-    "Material de escritório e papelaria": (
-        "Aquisição de materiais de expediente e papelaria, tais como resmas de papel A4, canetas "
-        "esferográficas, pastas arquivo e toners compatíveis, com entrega única em até 10 dias "
-        "corridos após emissão da ordem de fornecimento."
+    "Pregão — Fornecimento de Lanches / Coffee Break": (
+        "Órgão: Instituto Federal — Pregão Eletrônico | Valor estimado: R$ 64.000,00 | "
+        "Objeto: Fornecimento parcelado de kits de lanche e coffee break para eventos institucionais "
+        "com montagem no local e exigência de alvará sanitário vigente."
     ),
 }
+
+
+def montar_prompt_usuario(
+    texto_oportunidade: str,
+    perfil_empresa: dict | None = None,
+) -> str:
+    perfil = perfil_empresa or {}
+    ramo = perfil.get("ramo") or "Não especificado"
+    uf = perfil.get("uf") or "Não especificada"
+    porte = perfil.get("porte") or "MEI / Pequena Empresa"
+    margem_min = perfil.get("margem_minima_pct")
+    margem_txt = f"{margem_min:.0f}%" if isinstance(margem_min, (int, float)) else "Não informada"
+
+    return (
+        "=== PERFIL DA EMPRESA CLIENTE ===\n"
+        f"- Porte / Enquadramento: {porte}\n"
+        f"- Ramo / Atuação / Palavras-chave: {ramo}\n"
+        f"- UF / Região de atuação: {uf}\n"
+        f"- Margem líquida mínima desejada: {margem_txt}\n\n"
+        "=== DADOS DA OPORTUNIDADE / EDITAL / TRECHO ===\n"
+        f"{texto_oportunidade.strip()}\n\n"
+        "Gere o relatório técnico estruturado em JSON conforme as instruções do sistema."
+    )
